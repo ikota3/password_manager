@@ -70,6 +70,9 @@ def update_password_list():
             ])
 
 
+def update_theme(sender, _):
+    core.set_theme(sender)
+
 # def table_printer(sender, data):
 #     core.log_debug(f'sender is {sender}')
     # coord_list = core.get_table_data(sender)
@@ -93,9 +96,11 @@ def main():
             with simple.menu('File'):
                 core.add_menu_item('Import', callback=None)
                 core.add_menu_item('Export', callback=None)
-                core.add_menu_item('Exit', callback=None)
                 with simple.menu('Theme'):
-                    core.add_menu_item('Dark')
+                    themes = ['Dark', 'Light', 'Classic', 'Dark 2', 'Grey', 'Dark Grey', 'Cherry', 'Purple', 'Gold', 'Red']
+                    for theme in themes:
+                        core.add_menu_item(theme, callback=update_theme)
+                core.add_menu_item('Exit', callback=None)
             with simple.menu('About'):
                 core.add_menu_item('Help', callback=None)
                 core.add_menu_item('Version info', callback=None)
