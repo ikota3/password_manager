@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Password manager
+.vscode/
+secret.key
+password_manager.db
+test.sql
