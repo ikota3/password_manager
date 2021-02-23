@@ -7,6 +7,11 @@ DB_LOCATION = os.path.normpath(os.path.join(os.path.dirname(__file__), '../passw
 
 
 def create_connection():
+    """Create connection.
+
+    Returns:
+        sqlite3.Connection: connection object.
+    """
     conn = None
     try:
         conn = sqlite3.connect(DB_LOCATION, check_same_thread=False)
@@ -17,6 +22,8 @@ def create_connection():
 
 
 def close_connection():
+    """Close connection.
+    """
     con.close()
 
 
@@ -35,7 +42,9 @@ con.execute("""
 
 
 @dataclass
-class Password_Info:
+class PasswordInfo:
+    """TODO Add doc
+    """
     row_id: int = field(default=None)
     title: str = field(default=None)
     identifier: str = field(default=None)
@@ -45,7 +54,9 @@ class Password_Info:
     updated_at: datetime.datetime = field(default=None)
 
 
-def insert_one_item(password_info: Password_Info):
+def insert_one_item(password_info: PasswordInfo):
+    """Insert one item in password info.
+    """
     try:
         with con:
             con.execute(
@@ -72,7 +83,10 @@ def insert_one_item(password_info: Password_Info):
         print(e)
 
 
-def update_one_item(password_info: Password_Info):
+# TODO not tested
+def update_one_item(password_info: PasswordInfo):
+    """Update one item in password info.
+    """
     try:
         with con:
             con.execute(
@@ -98,7 +112,10 @@ def update_one_item(password_info: Password_Info):
         print(e)
 
 
-def delete_one_item(password_info: Password_Info):
+# TODO not tested
+def delete_one_item(password_info: PasswordInfo):
+    """Delete one item in password info.
+    """
     try:
         with con:
             con.execute(
@@ -112,7 +129,23 @@ def delete_one_item(password_info: Password_Info):
         print(e)
 
 
-def select_all_item():
+def delete_all_items():
+    """Delete all items in password info.
+    """
+    try:
+        with con:
+            con.execute(
+                """
+                delete from password_info;
+                """
+            )
+    except sqlite3.Error as e:
+        print(e)
+
+
+def select_all_items():
+    """Select all items in password_info.
+    """
     try:
         with con:
             results = con.execute(
@@ -129,6 +162,6 @@ def select_all_item():
                 order by row_id
                 """
             ).fetchall()
-            return [Password_Info(*row) for row in results]
+            return [PasswordInfo(*row) for row in results]
     except sqlite3.Error as e:
         print(e)
