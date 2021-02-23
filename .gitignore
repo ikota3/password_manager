@@ -133,3 +133,4 @@ dmypy.json
 secret.key
 password_manager.db
 test.sql
+test.py
