@@ -50,8 +50,8 @@ class PasswordInfo:
     identifier: str = field(default=None)
     password: bytes = field(default=None)
     note: str = field(default=None)
-    created_at: datetime.datetime = field(default=None)
-    updated_at: datetime.datetime = field(default=None)
+    created_at: str = field(default=None)
+    updated_at: str = field(default=None)
 
 
 def insert_one_item(password_info: PasswordInfo):
@@ -143,7 +143,7 @@ def delete_all_items():
         print(e)
 
 
-def select_all_items():
+def select_all_items() -> list[PasswordInfo]:
     """Select all items in password_info.
     """
     try:
@@ -165,3 +165,26 @@ def select_all_items():
             return [PasswordInfo(*row) for row in results]
     except sqlite3.Error as e:
         print(e)
+
+
+def select_password_by_row_id(password_info: PasswordInfo) -> str:
+    """Select password from password_info.
+    """
+    try:
+        with con:
+            result = con.execute(
+                """
+                select
+                    password
+                from password_info
+                where row_id = ?
+                """,
+                (password_info.row_id)
+            ).fetchone()[0]
+            return result
+    except sqlite3.Error as e:
+        print(e)
+
+
+if __name__ == '__main__':
+    close_connection()
