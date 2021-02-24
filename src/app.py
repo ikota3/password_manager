@@ -2,7 +2,6 @@ import random
 import pyperclip
 from dearpygui import core, simple
 from cryption import encrypt, decrypt
-from datetime import datetime
 import model
 
 DEBUG_MODE = False
