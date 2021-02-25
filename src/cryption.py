@@ -1,6 +1,9 @@
 import os
 from cryptography.fernet import Fernet
+from app import add_info_message, add_error_message
 
+
+# secret.key location(at password_manager/secret.key)
 KEY_LOCATION = os.path.normpath(os.path.join(os.path.dirname(__file__), '../secret.key'))
 
 
@@ -17,20 +20,20 @@ def generate_key() -> None:
     """Generate secret key
     """
     if key_exists():
-        print('secret key already exist!')
-        print('Abort...')
+        add_error_message('secret key already exist!')
+        add_error_message('Abort...')
         return
 
-    print(f'Generating secret key at {KEY_LOCATION}')
+    add_info_message(f'Generating secret key at {KEY_LOCATION}')
     try:
         key = Fernet.generate_key()
         with open(KEY_LOCATION, 'wb') as f:
             f.write(key)
     except Exception as e:
-        print(e)
-        print('Some error occurred at generating key')
-        print('Abort...')
-    print('secret key was created successfully!')
+        add_error_message(e)
+        add_error_message('Some error occurred at generating key')
+        add_error_message('Abort...')
+    add_info_message('secret key was created successfully!')
 
 
 def load_key() -> bytes:
@@ -63,17 +66,17 @@ def encrypt(plain_text: str) -> bytes:
     return encrypted_text
 
 
-def decrypt(encrypted_text: bytes) -> str:
+def decrypt(encrypted_bytes: bytes) -> str:
     """Decrypt encrypted text
 
     Args:
-        encrypted_text (str): encrypted text
+        encrypted_bytes (bytes): encrypted bytes
 
     Returns:
         str: decrypted text
     """
     f = Fernet(load_key())
-    decrypted_text = f.decrypt(encrypted_text).decode()
+    decrypted_text = f.decrypt(encrypted_bytes).decode()
 
     return decrypted_text
 
