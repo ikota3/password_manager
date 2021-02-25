@@ -8,6 +8,7 @@ Managing password in GUI application.
 
 - dearpygui
 - pyperclip
+- cryptography
 
 ### Install
 
