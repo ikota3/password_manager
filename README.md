@@ -15,3 +15,9 @@ Managing password in GUI application.
 ```bash
 pip install requirements.txt
 ```
+
+### Run
+
+```bash
+python3 src/app.py
+```
