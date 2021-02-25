@@ -8,9 +8,16 @@ Managing password in GUI application.
 
 - dearpygui
 - pyperclip
+- cryptography
 
 ### Install
 
 ```bash
 pip install requirements.txt
+```
+
+### Run
+
+```bash
+python3 src/app.py
 ```
