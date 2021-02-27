@@ -20,6 +20,9 @@ FONT_SIZE = 15
 DEFAULT_THEME = 'Cherry'
 
 
+ROW_ID_COLUMN = 0
+
+
 def update_theme(theme):
     """Update theme.
 
@@ -57,7 +60,13 @@ def save_password():
         password=encrypt(password),
         note=note
     )
-    model.insert_one_item(password_info)
+
+    try:
+        model.insert_one_item(password_info)
+    except Exception:
+        add_error_message('Failed to save password.')
+        return
+
     add_info_message('Password was saved successfully.')
     update_password_table()
 
@@ -102,7 +111,7 @@ def format_password(password: str) -> str:
         password (str): password string
 
     Returns:
-        str: shuffled password
+        str: Shuffled password
     """
     return ''.join(random.sample(password, len(password)))[:10]
 
@@ -118,7 +127,13 @@ def update_password_table():
         core.add_table('##password_table', header, callback=table_printer, width=ITEM_WIDTH, height=int(WINDOW_HEIGHT * 0.45))
 
     core.clear_table('##password_table')
-    password_infos = model.select_all_items()
+
+    try:
+        password_infos = model.select_all_items()
+    except Exception:
+        add_error_message('Failed to fetch passwords.')
+        return
+
     if password_infos:
         for password_info in password_infos:
             core.add_row('##password_table', [
@@ -141,7 +156,12 @@ def delete_password_table(_, is_yes: bool):
     if not is_yes:
         return
 
-    model.delete_all_items()
+    try:
+        model.delete_all_items()
+    except Exception:
+        add_error_message('Failed to delete all passwords.')
+        return
+
     add_info_message('All passwords was deleted successfully.')
 
     update_password_table()
@@ -151,13 +171,19 @@ def table_printer(table_name):
     selected_cells = core.get_table_selections(table_name)
     if selected_cells and len(selected_cells) == 1:
         cell_row = selected_cells[0][0]
-        row_id_column = 0
-        row_id = str(core.get_table_item(table_name, cell_row, row_id_column))
+        row_id = str(core.get_table_item(table_name, cell_row, ROW_ID_COLUMN))
+
         password_info = model.PasswordInfo(row_id=row_id)
-        decrypted_password = decrypt(model.select_password_by_row_id(password_info))
+        try:
+            encrypted_password = model.select_password_by_row_id(password_info)
+        except Exception:
+            add_error_message('Failed to get password.')
+            return
+
+        decrypted_password = decrypt(encrypted_password)
         pyperclip.copy(decrypted_password)
+
         add_info_message(f'Row id: {row_id}\'s password was copied to clipboard.')
-        return
 
 
 # NOTE THIS FUNCTION WILL BE CALLED EVERY FRAME

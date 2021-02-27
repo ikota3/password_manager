@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 DB_LOCATION = os.path.normpath(os.path.join(os.path.dirname(__file__), '../password_manager.db'))
 
 
-def create_connection():
+def create_connection() -> sqlite3.Connection:
     """Create connection.
 
     Returns:
@@ -17,6 +17,7 @@ def create_connection():
         conn = sqlite3.connect(DB_LOCATION, check_same_thread=False)
     except sqlite3.Error as e:
         print(e)
+        raise
 
     return conn
 
@@ -27,7 +28,10 @@ def close_connection():
     con.close()
 
 
-con = create_connection()
+try:
+    con = create_connection()
+except Exception:
+    raise
 con.execute("""
             create table if not exists password_info (
                 row_id INTEGER PRIMARY KEY,
@@ -43,7 +47,16 @@ con.execute("""
 
 @dataclass
 class PasswordInfo:
-    """TODO Add doc
+    """Class for storing password information.
+
+    Args:
+        row_id (int): Row id.
+        title (str): Title.
+        identifier (str): Identifier.
+        password (bytes): Password.
+        note (str): Note.
+        created_at (str): Created time.
+        updated_at (str): Updated time.
     """
     row_id: int = field(default=None)
     title: str = field(default=None)
@@ -56,6 +69,8 @@ class PasswordInfo:
 
 def insert_one_item(password_info: PasswordInfo):
     """Insert one item in password info.
+
+    Args: PasswordInfo
     """
     try:
         with con:
@@ -81,11 +96,14 @@ def insert_one_item(password_info: PasswordInfo):
             )
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 # TODO not tested
-def update_one_item(password_info: PasswordInfo):
+def update_item_by_row_id(password_info: PasswordInfo):
     """Update one item in password info.
+
+    Args: PasswordInfo
     """
     try:
         with con:
@@ -110,11 +128,14 @@ def update_one_item(password_info: PasswordInfo):
             )
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 # TODO not tested
-def delete_one_item(password_info: PasswordInfo):
+def delete_item_by_row_id(password_info: PasswordInfo):
     """Delete one item in password info.
+
+    Args: PasswordInfo
     """
     try:
         with con:
@@ -127,6 +148,7 @@ def delete_one_item(password_info: PasswordInfo):
             )
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 def delete_all_items():
@@ -141,10 +163,13 @@ def delete_all_items():
             )
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 def select_all_items() -> list[PasswordInfo]:
     """Select all items in password_info.
+
+    Returns: list of passwordinfo
     """
     try:
         with con:
@@ -165,10 +190,13 @@ def select_all_items() -> list[PasswordInfo]:
             return [PasswordInfo(*row) for row in results]
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 def select_password_by_row_id(password_info: PasswordInfo) -> str:
     """Select password from password_info.
+
+    Args: PasswordInfo
     """
     try:
         with con:
@@ -184,6 +212,7 @@ def select_password_by_row_id(password_info: PasswordInfo) -> str:
             return result
     except sqlite3.Error as e:
         print(e)
+        raise
 
 
 if __name__ == '__main__':
