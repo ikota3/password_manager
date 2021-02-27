@@ -1,6 +1,5 @@
 import os
 from cryptography.fernet import Fernet
-from app import add_info_message, add_error_message
 
 
 # secret.key location(at password_manager/secret.key)
@@ -20,20 +19,20 @@ def generate_key() -> None:
     """Generate secret key
     """
     if key_exists():
-        add_error_message('secret key already exist!')
-        add_error_message('Abort...')
+        print('Secret key already exist.')
+        print('Abort...')
         return
 
-    add_info_message(f'Generating secret key at {KEY_LOCATION}')
+    print(f'Generating secret key at {KEY_LOCATION}.')
+    key = Fernet.generate_key()
     try:
-        key = Fernet.generate_key()
         with open(KEY_LOCATION, 'wb') as f:
             f.write(key)
-    except Exception as e:
-        add_error_message(e)
-        add_error_message('Some error occurred at generating key')
-        add_error_message('Abort...')
-    add_info_message('secret key was created successfully!')
+    except IOError as e:
+        print('Failed to generate secret key.')
+        print(e)
+        raise
+    print('Secret key was successfully generated.')
 
 
 def load_key() -> bytes:
@@ -43,12 +42,19 @@ def load_key() -> bytes:
         bytes: byte data from secret key
     """
     if not key_exists():
-        generate_key()
+        try:
+            generate_key()
+        except BaseException:
+            return
 
     key = None
-    with open(KEY_LOCATION, 'rb') as f:
-        key = f.read()
-    return key
+    try:
+        with open(KEY_LOCATION, 'rb') as f:
+            key = f.read()
+        return key
+    except IOError as e:
+        print('Failed to load secret key.')
+        print(e)
 
 
 def encrypt(plain_text: str) -> bytes:
@@ -67,7 +73,7 @@ def encrypt(plain_text: str) -> bytes:
 
 
 def decrypt(encrypted_bytes: bytes) -> str:
-    """Decrypt encrypted text
+    """Decrypt encrypted bytes
 
     Args:
         encrypted_bytes (bytes): encrypted bytes
@@ -79,7 +85,3 @@ def decrypt(encrypted_bytes: bytes) -> str:
     decrypted_text = f.decrypt(encrypted_bytes).decode()
 
     return decrypted_text
-
-
-if __name__ == '__main__':
-    generate_key()
