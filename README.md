@@ -2,6 +2,16 @@
 
 Managing password in GUI application.
 
+## TODO
+
+- [ ] Add search filter for password table.
+
+- [ ] Better log message
+
+- [ ] Better layout
+
+- [ ] Refactor
+
 ## Requirements
 
 ### Library
