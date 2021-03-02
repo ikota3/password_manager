@@ -64,12 +64,12 @@ def encrypt(plain_text: str) -> bytes:
         plain_text (str): plain text
 
     Returns:
-        str: encrypted text
+        bytes: encrypted bytes
     """
     f = Fernet(load_key())
-    encrypted_text = f.encrypt(plain_text.encode())
+    encrypted_bytes = f.encrypt(plain_text.encode())
 
-    return encrypted_text
+    return encrypted_bytes
 
 
 def decrypt(encrypted_bytes: bytes) -> str:
