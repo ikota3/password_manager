@@ -3,6 +3,7 @@ import pyperclip
 from dearpygui import core, simple
 from cryption import encrypt, decrypt
 import model
+import menu
 
 DEBUG_MODE = False
 
@@ -21,15 +22,6 @@ DEFAULT_THEME = 'Cherry'
 
 
 ROW_ID_COLUMN = 0
-
-
-def update_theme(theme):
-    """Update theme.
-
-    Args:
-        theme (str): theme name
-    """
-    core.set_theme(theme)
 
 
 def save_password():
@@ -213,13 +205,6 @@ def center_item(name: str):
     core.set_item_style_var(f'{name}_container', core.mvGuiStyleVar_ItemSpacing, [0, y_space])
 
 
-def show_version():
-    """Show version of this app.
-    """
-    with simple.window('Version Info##version_info_window', autosize=True, x_pos=int((WINDOW_WIDTH // 2) * 0.9), y_pos=int((WINDOW_HEIGHT // 2) * 0.9), on_close=lambda: core.delete_item('Version Info##version_info_window')):
-        core.add_text('##version_info_0', default_value=f'Password Manager v{VERSION}')
-
-
 def main():
 
     center_items = []
@@ -233,12 +218,11 @@ def main():
                 with simple.menu('Theme'):
                     themes = ['Dark', 'Light', 'Classic', 'Dark 2', 'Grey', 'Dark Grey', 'Cherry', 'Purple', 'Gold', 'Red']
                     for theme in themes:
-                        core.add_menu_item(theme, callback=update_theme)
+                        core.add_menu_item(theme, callback=menu.update_theme)
                 # core.add_menu_item('Exit', callback=None)
             with simple.menu('About'):
+                core.add_menu_item('Version', callback=menu.show_version, callback_data=VERSION)
                 # core.add_menu_item('Help', callback=None)
-                # TODO IF CLICK 2 TIMES, THE VERSION INFO WINDOW WILL BE BIT WEIRD
-                core.add_menu_item('Version', callback=show_version)
 
         with simple.group('##input_group'):
             # Title input
