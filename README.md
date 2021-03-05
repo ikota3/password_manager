@@ -4,6 +4,8 @@ Managing password in GUI application.
 
 ## TODO
 
+- [ ] Add Import, Export features
+
 - [ ] Add search filter for password table.
 
 - [ ] Better log message
