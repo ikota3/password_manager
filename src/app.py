@@ -1,208 +1,33 @@
-import random
-import pyperclip
-from dearpygui import core, simple
-from cryption import encrypt, decrypt
-import model
 import menu
+import input_field
+import table
+import logger
+import model
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_PADDING
+from dearpygui import core, simple
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
-VERSION = 1.0
-TITLE = 'Password Manager'
 RESIZABLE = True
-WINDOW_WIDTH = 720
-WINDOW_HEIGHT = 900
-ITEM_WIDTH = int(WINDOW_WIDTH * 0.96)
-SCROLL_BAR_SIZE = 10.0
 
-FONT = 'font/FiraCode-Medium.ttf'
+TITLE = 'Password Manager'
+FONT = 'font/FiraCode-Medium.ttf'  # TODO
 FONT_SIZE = 15
-
 DEFAULT_THEME = 'Cherry'
 
+WIDGET_WIDTH = WINDOW_WIDTH - (WINDOW_PADDING * 2) - 16  # 16...
+WIDGET_HALF_WIDTH = (WIDGET_WIDTH // 2)
 
-ROW_ID_COLUMN = 0
+# INPUT ID CONSTANT
+TITLE_ID = '##input_title'
+IDENTIFIER_ID = '##input_identifier'
+PASSWORD_ID = '##input_password'
+NOTE_ID = '##input_note'
 
-
-def save_password():
-    """Save password info to database.
-    """
-    title = core.get_value('##title')
-    identifier = core.get_value('##identifier')
-    password = core.get_value('##password')
-    note = core.get_value('##note')
-
-    is_valid = True
-    if not title:
-        add_error_message('Title is required. Please set the Title.')
-        is_valid = False
-    if not identifier:
-        add_error_message('Identifier is required. Please set the Identifier.')
-        is_valid = False
-    if not password:
-        add_error_message('Password is required. Please set the Password')
-        is_valid = False
-
-    if not is_valid:
-        return
-
-    password_info = model.PasswordInfo(
-        title=title,
-        identifier=identifier,
-        password=encrypt(password),
-        note=note
-    )
-
-    try:
-        model.insert_one_item(password_info)
-    except Exception:
-        add_error_message('Failed to save password.')
-        return
-
-    add_info_message('Password was saved successfully.')
-    update_password_table()
-
-
-def clear_input():
-    """Clear input
-    """
-    core.set_value('##title', '')
-    core.set_value('##identifier', '')
-    core.set_value('##password', '')
-    core.set_value('##note', '')
-
-
-def add_info_message(message: str):
-    """Log message for info.
-
-    Args:
-        message (str): message to display
-    """
-    core.log_info(message, logger='##log_message')
-
-
-def add_error_message(message: str):
-    """Log message for error.
-
-    Args:
-        message (str): message to display
-    """
-    core.log_error(message, logger='##log_message')
-
-
-def clear_log():
-    """Clear log
-    """
-    core.clear_log(logger='##log_message')
-
-
-def format_password(password: str) -> str:
-    """Shuffle the password.
-
-    Args:
-        password (str): password string
-
-    Returns:
-        str: Shuffled password
-    """
-    return ''.join(random.sample(password, len(password)))[:10]
-
-
-def update_password_table():
-    """Update password table contents.
-
-    Clear the all contents in the password table,
-    and recreate table entirely.
-    """
-    if not core.does_item_exist('##password_table'):
-        header = ['No', 'Title', 'Identifier', 'Password', 'Note']
-        core.add_table('##password_table', header, callback=table_printer, width=ITEM_WIDTH, height=int(WINDOW_HEIGHT * 0.45))
-
-    core.clear_table('##password_table')
-
-    try:
-        password_infos = model.select_all_items()
-    except Exception:
-        add_error_message('Failed to fetch passwords.')
-        return
-
-    if password_infos:
-        for password_info in password_infos:
-            core.add_row('##password_table', [
-                password_info.row_id,
-                password_info.title,
-                password_info.identifier,
-                format_password(password_info.password.decode()),
-                password_info.note,
-            ])
-    add_info_message('Password table was updated.')
-
-
-def delete_password_table(_, is_yes: bool):
-    """Delete password table contents.
-
-    Args:
-        is_yes (bool): Yes(True) or No(False) which user select on the popup
-    """
-    core.close_popup("Are you sure to continue?##ask_delete")
-    if not is_yes:
-        return
-
-    try:
-        model.delete_all_items()
-    except Exception:
-        add_error_message('Failed to delete all passwords.')
-        return
-
-    add_info_message('All passwords was deleted successfully.')
-
-    update_password_table()
-
-
-def table_printer(table_name):
-    selected_cells = core.get_table_selections(table_name)
-    if selected_cells and len(selected_cells) == 1:
-        cell_row = selected_cells[0][0]
-        row_id = str(core.get_table_item(table_name, cell_row, ROW_ID_COLUMN))
-
-        password_info = model.PasswordInfo(row_id=row_id)
-        try:
-            encrypted_password = model.select_password_by_row_id(password_info)
-        except Exception:
-            add_error_message('Failed to get password.')
-            return
-
-        decrypted_password = decrypt(encrypted_password)
-        pyperclip.copy(decrypted_password)
-
-        add_info_message(f'Row id: {row_id}\'s password was copied to clipboard.')
-
-
-# NOTE THIS FUNCTION WILL BE CALLED EVERY FRAME
-# By setting core.set_render_callback(apply_centering)
-def apply_centering():
-    items = list(core.get_data("item_center_list"))
-    if items:
-        for item in items:
-            container_width = core.get_item_rect_size(core.get_item_parent(item))[0]
-            item_width, item_height = core.get_item_rect_size(item)
-            simple.set_item_height(f'{item}_container', int(item_height))
-            pos = int((container_width / 2) - (item_width / 2))
-            simple.set_item_width(f'{item}_dummy', pos)
-
-
-# Center widget
-# TODO NEED TO FIX
-def center_item(name: str):
-    with simple.child(f'{name}_container', autosize_x=True, no_scrollbar=True, border=False):
-        core.add_dummy(name=f'{name}_dummy')
-        core.add_same_line(name=f'{name}_sameline')
-        core.move_item(name, parent=f'{name}_container')
-    items = list(core.get_data('item_center_list'))
-    items.append(name)
-    core.add_data('item_center_list', items)
-    y_space = core.get_style_item_spacing()[1]
-    core.set_item_style_var(f'{name}_container', core.mvGuiStyleVar_ItemSpacing, [0, y_space])
+# COLOR CONSTANT
+RED = (219, 82, 75, 100)
+GREEN = (123, 213, 0, 100)
+BLUE = (62, 138, 204, 100)
 
 
 def main():
@@ -210,8 +35,8 @@ def main():
     center_items = []
     core.add_data('item_center_list', center_items)
 
-    with simple.window(TITLE, x_pos=0, y_pos=0):
-        with simple.menu_bar('Menu bar'):
+    with simple.window(TITLE):
+        with simple.menu_bar('##menu_bar'):
             with simple.menu('File'):
                 # core.add_menu_item('Import', callback=None)
                 # core.add_menu_item('Export', callback=None)
@@ -221,70 +46,72 @@ def main():
                         core.add_menu_item(theme, callback=menu.update_theme)
                 # core.add_menu_item('Exit', callback=None)
             with simple.menu('About'):
-                core.add_menu_item('Version', callback=menu.show_version, callback_data=VERSION)
+                core.add_menu_item('Version', callback=menu.show_version)
                 # core.add_menu_item('Help', callback=None)
 
         with simple.group('##input_group'):
             # Title input
             core.add_text('Title:')
-            core.add_input_text('##title', hint='Enter title', width=ITEM_WIDTH)
+            core.add_input_text(TITLE_ID, hint='Enter title', width=WIDGET_WIDTH)
             core.add_spacing(count=2)
 
             # Identifier input
             core.add_text('Identifier:')
-            core.add_input_text('##identifier', hint='Enter identifier', width=ITEM_WIDTH)
+            core.add_input_text(IDENTIFIER_ID, hint='Enter identifier', width=WIDGET_WIDTH)
             core.add_spacing(count=2)
 
             # Password input
             core.add_text('Password:')
-            core.add_input_text('##password', hint='Enter password', width=ITEM_WIDTH)
+            core.add_input_text(PASSWORD_ID, hint='Enter password', width=WIDGET_WIDTH)
             core.add_spacing(count=2)
 
             # Note input
             core.add_text('Note:')
-            core.add_input_text('##note', hint='Enter note info', width=ITEM_WIDTH)
+            core.add_input_text(NOTE_ID, hint='Enter note info', width=WIDGET_WIDTH)
             core.add_spacing(count=10)
 
             # Save button
-            spacing = 20
-            core.add_button('Save', callback=save_password, width=(ITEM_WIDTH - spacing) // 2)
-            core.add_same_line(spacing=20)
-
+            save_clear_spacing = 50
+            core.add_button('##save', label='Save', callback=input_field.save_password, width=WIDGET_HALF_WIDTH - (save_clear_spacing // 2))
+            core.set_item_color('##save', core.mvGuiCol_Button, color=GREEN)
+            core.add_same_line(spacing=save_clear_spacing)
             # Clear input entry button
-            core.add_button('Clear input##clear_input', callback=clear_input, width=(ITEM_WIDTH - spacing) // 2)
+            core.add_button('##clear_input', label='Clear input', callback=input_field.clear_input, width=WIDGET_HALF_WIDTH - (save_clear_spacing // 2))
             core.add_spacing(count=20)
 
         with simple.group('##log_group'):
-            # Log label
-            core.add_text('Log message:')
-            core.add_spacing(count=10)
-
             # Logger
-            core.add_logger('##log_message', width=ITEM_WIDTH, height=100, auto_scroll_button=False, copy_button=False, filter=False, clear_button=False)
+            core.add_logger('##log_message', auto_scroll_button=False, copy_button=False, filter=False, clear_button=False, width=WIDGET_WIDTH, height=80)
             core.set_log_level(core.mvTRACE, logger='##log_message')
             core.add_spacing(count=10)
 
             # Clear log button
-            core.add_button('Clear log##clear_log', callback=clear_log, width=ITEM_WIDTH)
+            core.add_button('##clear_log', label='Clear log', callback=logger.clear_log, width=WIDGET_WIDTH)
             core.add_spacing(count=10)
 
         with simple.group('##password_table_group'):
             # Password table
-            update_password_table()
+            header = ['No', 'Title', 'Identifier', 'Password', 'Note']
+            core.add_table('##password_table', header, callback=table.table_printer, height=int(WINDOW_HEIGHT * 0.45), width=WIDGET_WIDTH)
             core.add_spacing(count=10)
 
+            table.update_password_table()
+
             # Update password table button
-            core.add_button('Update table', callback=update_password_table, width=(ITEM_WIDTH - spacing) // 2)
-            core.add_same_line(spacing=20)
+            update_delete_spacing = 20
+            core.add_button('##update_table', label='Update table', callback=table.update_password_table, width=WIDGET_HALF_WIDTH - (update_delete_spacing // 2))
+            core.set_item_color('##update_table', core.mvGuiCol_Button, color=BLUE)
+            core.add_same_line(spacing=update_delete_spacing)
 
             # Delete password table button
-            core.add_button('Delete table', width=(ITEM_WIDTH - spacing) // 2)
-            with simple.popup('Delete table', 'Are you sure to continue?##ask_delete', mousebutton=core.mvMouseButton_Left, modal=True):
+            core.add_button('##delete_table', label='Delete table', width=WIDGET_HALF_WIDTH - (update_delete_spacing // 2))
+            core.set_item_color('##delete_table', core.mvGuiCol_Button, color=RED)
+            with simple.popup('##delete_table', 'Are you sure to continue?##ask_delete', mousebutton=core.mvMouseButton_Left, modal=True):
                 with simple.group('##delete_table_button_group'):
                     core.add_text('##delete_table_button', default_value='Are you sure to delete all data?')
-                    core.add_button('##delete_table_button_yes', label='Yes', callback=delete_password_table, callback_data=True)
+                    core.add_button('##delete_table_button_yes', label='Yes', callback=table.delete_password_table, callback_data=True)
                     core.add_same_line(spacing=10)
-                    core.add_button('##delete_table_button_no', label='No', callback=delete_password_table, callback_data=False)
+                    core.add_button('##delete_table_button_no', label='No', callback=table.delete_password_table, callback_data=False)
                     # TODO WONT WORK NEED TO FIX center_item FUNCTION
                     # center_item('##delete_table_button')
                     # center_item('##delete_table_button_yes')
@@ -302,8 +129,7 @@ def main():
     core.set_main_window_title(TITLE)
     core.set_main_window_size(WINDOW_WIDTH, WINDOW_HEIGHT)
     core.set_main_window_resizable(RESIZABLE)
-    core.set_style_scrollbar_size(SCROLL_BAR_SIZE)
-
+    core.set_style_window_padding(WINDOW_PADDING, WINDOW_PADDING)
     core.set_exit_callback(model.close_connection)
 
     # core.set_render_callback(apply_centering)
