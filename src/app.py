@@ -1,3 +1,4 @@
+import os
 import menu
 import input_field
 import table
@@ -8,10 +9,10 @@ from dearpygui import core, simple
 
 DEBUG_MODE = True
 
-RESIZABLE = True
+RESIZABLE = False
 
 TITLE = 'Password Manager'
-FONT = 'font/FiraCode-Medium.ttf'  # TODO
+FONT = os.path.join(os.path.dirname(__file__), '../font/FiraCode-Medium.ttf')
 FONT_SIZE = 15
 DEFAULT_THEME = 'Cherry'
 
