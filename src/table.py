@@ -55,7 +55,7 @@ def delete_password_table(_, is_yes: bool):
     Args:
         is_yes (bool): Yes(True) or No(False) which user select on the popup
     """
-    core.close_popup("Are you sure to continue?##ask_delete")
+    core.close_popup("##ask_delete")
     if not is_yes:
         return
 

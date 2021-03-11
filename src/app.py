@@ -7,7 +7,7 @@ import model
 from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_PADDING
 from dearpygui import core, simple
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 RESIZABLE = False
 
@@ -48,7 +48,6 @@ def main():
                 # core.add_menu_item('Exit', callback=None)
             with simple.menu('About'):
                 core.add_menu_item('Version', callback=menu.show_version)
-                # core.add_menu_item('Help', callback=None)
 
         with simple.group('##input_group'):
             # Title input
@@ -107,12 +106,18 @@ def main():
             # Delete password table button
             core.add_button('##delete_table', label='Delete table', width=WIDGET_HALF_WIDTH - (update_delete_spacing // 2))
             core.set_item_color('##delete_table', core.mvGuiCol_Button, color=RED)
-            with simple.popup('##delete_table', 'Are you sure to continue?##ask_delete', mousebutton=core.mvMouseButton_Left, modal=True):
+            with simple.popup('##delete_table', '##ask_delete', mousebutton=core.mvMouseButton_Left, modal=True):
                 with simple.group('##delete_table_button_group'):
+                    delete_table_spacing = 10
+                    delete_table_half_width = core.get_main_window_size()[1] // 5 - delete_table_spacing
+
                     core.add_text('##delete_table_button', default_value='Are you sure to delete all data?')
-                    core.add_button('##delete_table_button_yes', label='Yes', callback=table.delete_password_table, callback_data=True)
-                    core.add_same_line(spacing=10)
-                    core.add_button('##delete_table_button_no', label='No', callback=table.delete_password_table, callback_data=False)
+
+                    core.add_spacing(count=delete_table_spacing)
+                    core.add_button('##delete_table_button_yes', label='Yes', callback=table.delete_password_table, callback_data=True, width=delete_table_half_width)
+                    core.add_same_line(spacing=delete_table_spacing)
+                    core.add_button('##delete_table_button_no', label='No', callback=table.delete_password_table, callback_data=False, width=delete_table_half_width)
+
                     # TODO WONT WORK NEED TO FIX center_item FUNCTION
                     # center_item('##delete_table_button')
                     # center_item('##delete_table_button_yes')
